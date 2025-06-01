@@ -1,9 +1,6 @@
-
-
-// export default App;
 import React, { useEffect, useState } from 'react';
 
-const API_URL = 'https://project-sms-send-server.onrender.com/events';
+const API_URL = 'http://localhost:5000/events';
 
 function App() {
   const [events, setEvents] = useState([]);
@@ -174,12 +171,7 @@ function App() {
                     required
                   />
                   <div className="flex gap-2 justify-end">
-                    <button
-                      type="button"
-                      className="btn btn-outline"
-                      onClick={cancelEdit}
-                      disabled={loading}
-                    >
+                    <button type="button" className="btn btn-outline" onClick={cancelEdit} disabled={loading}>
                       Cancel
                     </button>
                     <button type="submit" className="btn btn-primary" disabled={loading}>
@@ -189,32 +181,17 @@ function App() {
                 </form>
               </li>
             ) : (
-              <li
-                key={event._id}
-                className="border border-gray-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
-              >
+              <li key={event._id} className="border border-gray-300 rounded-lg p-4 shadow-sm hover:shadow-md">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h2 className="text-xl font-semibold">
-                      {event.eventType} - {event.clientName}
-                    </h2>
+                    <h2 className="text-xl font-semibold">{event.eventType} - {event.clientName}</h2>
                     <p className="text-sm text-gray-600">
                       {event.phone} | {new Date(event.eventDate).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => startEditing(event)}
-                      className="btn btn-warning btn-sm"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(event._id)}
-                      className="btn btn-error btn-sm"
-                    >
-                      Delete
-                    </button>
+                    <button onClick={() => startEditing(event)} className="btn btn-warning btn-sm">Edit</button>
+                    <button onClick={() => handleDelete(event._id)} className="btn btn-error btn-sm">Delete</button>
                   </div>
                 </div>
                 <p className="mt-2 text-gray-700 whitespace-pre-wrap">{event.customMessage}</p>
@@ -226,77 +203,11 @@ function App() {
 
       <h2 className="text-2xl font-semibold mb-4">Add Event</h2>
       <form onSubmit={handleAddEvent} className="space-y-4">
-        <div>
-          <label className="label">
-            <span className="label-text">Type (e.g. Birthday, Eid)</span>
-          </label>
-          <input
-            name="type"
-            value={formData.type}
-            onChange={handleChange}
-            required
-            className="input input-bordered w-full"
-            placeholder="Type"
-          />
-        </div>
-
-        <div>
-          <label className="label">
-            <span className="label-text">Name</span>
-          </label>
-          <input
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            className="input input-bordered w-full"
-            placeholder="Name"
-          />
-        </div>
-
-        <div>
-          <label className="label">
-            <span className="label-text">Phone</span>
-          </label>
-          <input
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            required
-            className="input input-bordered w-full"
-            placeholder="Phone Number"
-          />
-        </div>
-
-        <div>
-          <label className="label">
-            <span className="label-text">Date</span>
-          </label>
-          <input
-            type="date"
-            name="date"
-            value={formData.date}
-            onChange={handleChange}
-            required
-            className="input input-bordered w-full"
-          />
-        </div>
-
-        <div>
-          <label className="label">
-            <span className="label-text">Message</span>
-          </label>
-          <textarea
-            name="message"
-            value={formData.message}
-            onChange={handleChange}
-            required
-            className="textarea textarea-bordered w-full"
-            placeholder="Message for SMS"
-            rows={3}
-          />
-        </div>
-
+        <input name="type" value={formData.type} onChange={handleChange} placeholder="Type" className="input input-bordered w-full" required />
+        <input name="name" value={formData.name} onChange={handleChange} placeholder="Name" className="input input-bordered w-full" required />
+        <input name="phone" value={formData.phone} onChange={handleChange} placeholder="Phone" className="input input-bordered w-full" required />
+        <input type="date" name="date" value={formData.date} onChange={handleChange} className="input input-bordered w-full" required />
+        <textarea name="message" value={formData.message} onChange={handleChange} className="textarea textarea-bordered w-full" placeholder="Message" required />
         <button type="submit" className="btn btn-primary w-full" disabled={loading}>
           {loading ? 'Adding...' : 'Add Event'}
         </button>
