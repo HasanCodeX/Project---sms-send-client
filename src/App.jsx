@@ -1,3 +1,6 @@
+
+
+// export default App;
 import React, { useEffect, useState } from 'react';
 
 const API_URL = 'http://localhost:5000/events';
@@ -21,7 +24,6 @@ function App() {
     message: '',
   });
 
-  // Fetch events
   const fetchEvents = async () => {
     try {
       const res = await fetch(API_URL);
@@ -47,7 +49,13 @@ function App() {
       const res = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          eventType: formData.type,
+          clientName: formData.name,
+          phone: formData.phone,
+          eventDate: formData.date,
+          customMessage: formData.message,
+        }),
       });
       if (!res.ok) throw new Error('Failed to add event');
       setFormData({ type: '', name: '', phone: '', date: '', message: '' });
@@ -69,15 +77,14 @@ function App() {
     }
   };
 
-  // Edit Handlers
   const startEditing = event => {
     setEditingId(event._id);
     setEditData({
-      type: event.type,
-      name: event.name,
+      type: event.eventType,
+      name: event.clientName,
       phone: event.phone,
-      date: event.date.slice(0, 10), // format date for input type="date"
-      message: event.message,
+      date: event.eventDate.slice(0, 10),
+      message: event.customMessage,
     });
   };
 
@@ -92,7 +99,13 @@ function App() {
       const res = await fetch(`${API_URL}/${editingId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editData),
+        body: JSON.stringify({
+          eventType: editData.type,
+          clientName: editData.name,
+          phone: editData.phone,
+          eventDate: editData.date,
+          customMessage: editData.message,
+        }),
       });
       if (!res.ok) throw new Error('Failed to update event');
       setEditingId(null);
@@ -183,10 +196,10 @@ function App() {
                 <div className="flex justify-between items-center">
                   <div>
                     <h2 className="text-xl font-semibold">
-                      {event.type} - {event.name}
+                      {event.eventType} - {event.clientName}
                     </h2>
                     <p className="text-sm text-gray-600">
-                      {event.phone} | {new Date(event.date).toLocaleDateString()}
+                      {event.phone} | {new Date(event.eventDate).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -204,7 +217,7 @@ function App() {
                     </button>
                   </div>
                 </div>
-                <p className="mt-2 text-gray-700 whitespace-pre-wrap">{event.message}</p>
+                <p className="mt-2 text-gray-700 whitespace-pre-wrap">{event.customMessage}</p>
               </li>
             )
           )}
@@ -284,7 +297,7 @@ function App() {
           />
         </div>
 
-        <button type="submit" className={`btn btn-primary w-full`} disabled={loading}>
+        <button type="submit" className="btn btn-primary w-full" disabled={loading}>
           {loading ? 'Adding...' : 'Add Event'}
         </button>
       </form>
