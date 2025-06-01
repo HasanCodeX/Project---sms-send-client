@@ -3,7 +3,7 @@
 // export default App;
 import React, { useEffect, useState } from 'react';
 
-const API_URL = 'http://localhost:5000/events';
+const API_URL = 'https://project-sms-send-server.onrender.com/events';
 
 function App() {
   const [events, setEvents] = useState([]);
