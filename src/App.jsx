@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import Swal from 'sweetalert2';
 
 const API_URL = 'http://localhost:5000/events';
 
-function App() {
+export default function EventReminderApp() {
   const [events, setEvents] = useState([]);
   const [formData, setFormData] = useState({
     type: '',
@@ -21,6 +22,7 @@ function App() {
     message: '',
   });
 
+  // Fetch all events from backend
   const fetchEvents = async () => {
     try {
       const res = await fetch(API_URL);
@@ -35,10 +37,12 @@ function App() {
     fetchEvents();
   }, []);
 
+  // Handle input changes for add form
   const handleChange = e => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  // Add new event with SweetAlert2 success/error
   const handleAddEvent = async e => {
     e.preventDefault();
     setLoading(true);
@@ -57,23 +61,69 @@ function App() {
       if (!res.ok) throw new Error('Failed to add event');
       setFormData({ type: '', name: '', phone: '', date: '', message: '' });
       fetchEvents();
-    } catch (error) {
-      alert(error.message);
+      await Swal.fire({
+        icon: 'success',
+        title: 'Event Added',
+        text: 'Your event was added successfully.',
+        confirmButtonColor: '#000',
+        background: '#1a1a1a',
+        color: '#fff',
+      });
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: err.message || 'Something went wrong!',
+        confirmButtonColor: '#000',
+        background: '#1a1a1a',
+        color: '#fff',
+      });
     }
     setLoading(false);
   };
 
+  // Delete event with confirmation and alerts
   const handleDelete = async id => {
-    if (!window.confirm('Are you sure you want to delete this event?')) return;
-    try {
-      const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete event');
-      fetchEvents();
-    } catch (error) {
-      alert(error.message);
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'This event will be deleted permanently.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#555',
+      background: '#1a1a1a',
+      color: '#fff',
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed to delete event');
+        fetchEvents();
+        await Swal.fire({
+          icon: 'success',
+          title: 'Deleted!',
+          text: 'Event has been deleted.',
+          confirmButtonColor: '#000',
+          background: '#1a1a1a',
+          color: '#fff',
+        });
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Delete Failed',
+          text: err.message || 'Failed to delete event.',
+          confirmButtonColor: '#000',
+          background: '#1a1a1a',
+          color: '#fff',
+        });
+      }
     }
   };
 
+  // Start editing mode and fill edit form
   const startEditing = event => {
     setEditingId(event._id);
     setEditData({
@@ -85,10 +135,12 @@ function App() {
     });
   };
 
+  // Handle input changes for edit form
   const handleEditChange = e => {
     setEditData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  // Submit edited event with SweetAlert2 alerts
   const submitEdit = async e => {
     e.preventDefault();
     setLoading(true);
@@ -107,50 +159,73 @@ function App() {
       if (!res.ok) throw new Error('Failed to update event');
       setEditingId(null);
       fetchEvents();
-    } catch (error) {
-      alert(error.message);
+      await Swal.fire({
+        icon: 'success',
+        title: 'Updated!',
+        text: 'Your event has been updated.',
+        confirmButtonColor: '#000',
+        background: '#1a1a1a',
+        color: '#fff',
+      });
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text: err.message || 'Failed to update event.',
+        confirmButtonColor: '#000',
+        background: '#1a1a1a',
+        color: '#fff',
+      });
     }
     setLoading(false);
   };
 
+  // Cancel edit mode
   const cancelEdit = () => {
     setEditingId(null);
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-3xl">
-      <h1 className="text-4xl font-bold mb-6 text-center">Events List</h1>
+    <div
+      className="min-h-screen bg-black text-white flex flex-col items-center p-6"
+      style={{ fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen" }}
+    >
+      <h1 className="text-5xl font-extrabold mb-8 tracking-tight">Event Reminder & SMS Sender</h1>
 
       {events.length === 0 ? (
-        <p className="text-center text-gray-500">No events found</p>
+        <p className="text-gray-400 text-center mb-12">No events found. Add some below!</p>
       ) : (
-        <ul className="space-y-4 mb-8">
+        <ul className="w-full max-w-3xl space-y-6 mb-12">
           {events.map(event =>
             editingId === event._id ? (
-              <li key={event._id} className="border border-gray-300 rounded-lg p-4 shadow-sm">
-                <form onSubmit={submitEdit} className="space-y-4">
+              <li
+                key={event._id}
+                className="bg-gray-900 rounded-2xl p-6 shadow-md"
+              >
+                <form onSubmit={submitEdit} className="space-y-5">
                   <input
                     name="type"
                     value={editData.type}
                     onChange={handleEditChange}
-                    className="input input-bordered w-full"
-                    placeholder="Type"
+                    placeholder="Event Type (Birthday, Anniversary...)"
+                    className="bg-gray-800 rounded-lg p-3 w-full placeholder-gray-400 text-white border border-gray-700 focus:border-white focus:outline-none"
                     required
+                    autoFocus
                   />
                   <input
                     name="name"
                     value={editData.name}
                     onChange={handleEditChange}
-                    className="input input-bordered w-full"
                     placeholder="Name"
+                    className="bg-gray-800 rounded-lg p-3 w-full placeholder-gray-400 text-white border border-gray-700 focus:border-white focus:outline-none"
                     required
                   />
                   <input
                     name="phone"
                     value={editData.phone}
                     onChange={handleEditChange}
-                    className="input input-bordered w-full"
                     placeholder="Phone"
+                    className="bg-gray-800 rounded-lg p-3 w-full placeholder-gray-400 text-white border border-gray-700 focus:border-white focus:outline-none"
                     required
                   />
                   <input
@@ -158,62 +233,128 @@ function App() {
                     name="date"
                     value={editData.date}
                     onChange={handleEditChange}
-                    className="input input-bordered w-full"
+                    className="bg-gray-800 rounded-lg p-3 w-full text-white border border-gray-700 focus:border-white focus:outline-none"
                     required
                   />
                   <textarea
                     name="message"
                     value={editData.message}
                     onChange={handleEditChange}
-                    className="textarea textarea-bordered w-full"
-                    placeholder="Message"
                     rows={3}
+                    placeholder="Custom Message"
+                    className="bg-gray-800 rounded-lg p-3 w-full placeholder-gray-400 text-white border border-gray-700 focus:border-white focus:outline-none resize-none"
                     required
                   />
-                  <div className="flex gap-2 justify-end">
-                    <button type="button" className="btn btn-outline" onClick={cancelEdit} disabled={loading}>
+
+                  <div className="flex justify-end gap-4">
+                    <button
+                      type="button"
+                      onClick={cancelEdit}
+                      className="px-6 py-2 bg-gray-700 rounded-xl hover:bg-gray-600 transition"
+                      disabled={loading}
+                    >
                       Cancel
                     </button>
-                    <button type="submit" className="btn btn-primary" disabled={loading}>
+                    <button
+                      type="submit"
+                      className="px-6 py-2 bg-white text-black rounded-xl font-semibold hover:bg-gray-200 transition"
+                      disabled={loading}
+                    >
                       {loading ? 'Saving...' : 'Save'}
                     </button>
                   </div>
                 </form>
               </li>
             ) : (
-              <li key={event._id} className="border border-gray-300 rounded-lg p-4 shadow-sm hover:shadow-md">
-                <div className="flex justify-between items-center">
+              <li
+                key={event._id}
+                className="bg-gray-900 rounded-2xl p-6 shadow-md hover:shadow-xl transition"
+              >
+                <div className="flex justify-between items-center mb-2">
                   <div>
-                    <h2 className="text-xl font-semibold">{event.eventType} - {event.clientName}</h2>
-                    <p className="text-sm text-gray-600">
+                    <h2 className="text-2xl font-bold">{event.eventType}</h2>
+                    <p className="text-xl font-semibold">{event.clientName}</p>
+                    <p className="text-sm text-gray-400">
                       {event.phone} | {new Date(event.eventDate).toLocaleDateString()}
                     </p>
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => startEditing(event)} className="btn btn-warning btn-sm">Edit</button>
-                    <button onClick={() => handleDelete(event._id)} className="btn btn-error btn-sm">Delete</button>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => startEditing(event)}
+                      className="px-4 py-2 bg-gray-700 rounded-xl hover:bg-gray-600 transition"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(event._id)}
+                      className="px-4 py-2 bg-red-700 rounded-xl hover:bg-red-600 transition"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
-                <p className="mt-2 text-gray-700 whitespace-pre-wrap">{event.customMessage}</p>
+                <p className="text-gray-300 whitespace-pre-line">{event.customMessage}</p>
               </li>
             )
           )}
         </ul>
       )}
 
-      <h2 className="text-2xl font-semibold mb-4">Add Event</h2>
-      <form onSubmit={handleAddEvent} className="space-y-4">
-        <input name="type" value={formData.type} onChange={handleChange} placeholder="Type" className="input input-bordered w-full" required />
-        <input name="name" value={formData.name} onChange={handleChange} placeholder="Name" className="input input-bordered w-full" required />
-        <input name="phone" value={formData.phone} onChange={handleChange} placeholder="Phone" className="input input-bordered w-full" required />
-        <input type="date" name="date" value={formData.date} onChange={handleChange} className="input input-bordered w-full" required />
-        <textarea name="message" value={formData.message} onChange={handleChange} className="textarea textarea-bordered w-full" placeholder="Message" required />
-        <button type="submit" className="btn btn-primary w-full" disabled={loading}>
+      {/* Add New Event Form */}
+      <form
+        onSubmit={handleAddEvent}
+        className="w-full max-w-3xl space-y-5 bg-gray-900 rounded-2xl p-6 shadow-md"
+      >
+        <h2 className="text-3xl font-bold mb-4">Add New Event</h2>
+        <input
+          name="type"
+          value={formData.type}
+          onChange={handleChange}
+          placeholder="Event Type (Birthday, Anniversary...)"
+          className="bg-gray-800 rounded-lg p-3 w-full placeholder-gray-400 text-white border border-gray-700 focus:border-white focus:outline-none"
+          required
+        />
+        <input
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          placeholder="Name"
+          className="bg-gray-800 rounded-lg p-3 w-full placeholder-gray-400 text-white border border-gray-700 focus:border-white focus:outline-none"
+          required
+        />
+        <input
+          name="phone"
+          value={formData.phone}
+          onChange={handleChange}
+          placeholder="Phone"
+          className="bg-gray-800 rounded-lg p-3 w-full placeholder-gray-400 text-white border border-gray-700 focus:border-white focus:outline-none"
+          required
+        />
+        <input
+          type="date"
+          name="date"
+          value={formData.date}
+          onChange={handleChange}
+          className="bg-gray-800 rounded-lg p-3 w-full text-white border border-gray-700 focus:border-white focus:outline-none"
+          required
+        />
+        <textarea
+          name="message"
+          value={formData.message}
+          onChange={handleChange}
+          rows={3}
+          placeholder="Custom Message"
+          className="bg-gray-800 rounded-lg p-3 w-full placeholder-gray-400 text-white border border-gray-700 focus:border-white focus:outline-none resize-none"
+          required
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-3 bg-white text-black font-semibold rounded-xl hover:bg-gray-200 transition"
+        >
           {loading ? 'Adding...' : 'Add Event'}
         </button>
       </form>
     </div>
   );
 }
-
-export default App;
